@@ -4,11 +4,13 @@ import { Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, useRouter } from "expo-router";
 import { palette } from "../../css_variables/colors";
+import { Token } from "../../lib/api";
 
 export default function Menu() {
     const router = useRouter();
 
     const auth = () => {
+        Token.clear()
         router.push('./')
     }
 

@@ -1,75 +1,10 @@
-import React, { useState } from 'react';
+import React, { use, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Pressable } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { palette } from '../../css_variables/colors';
-
-const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const router = useRouter();
-
-  const onJoin = () => {
-    // auth...
-    router.push('./menu');
-  };
-
-  return (
-    <View style={styles.container}>
-      {/* Header com back */}
-      <View style={styles.headerRow}>
-        <Link href="/" asChild>
-          <Pressable hitSlop={8}>
-            <Ionicons name="chevron-back" size={24} color={palette.text} />
-          </Pressable>
-        </Link>
-        <Text style={styles.title}>Welcome back</Text>
-        <View style={{ width: 24 }} />
-      </View>
-
-      <Text style={styles.subtitle}>
-        Sign in to your essential{'\n'}Services club
-      </Text>
-
-      <View style={styles.form}>
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor={palette.placeholder}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-
-        <TextInput
-          style={[styles.input, { marginTop: 16 }]}
-          placeholder="Password"
-          placeholderTextColor={palette.placeholder}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-
-        {/* Ele será redirecionado para o suporte do app */}
-        <Link href="./forgot" style={styles.forgotLink}>
-          Forgot password?
-        </Link>
-
-        <Pressable style={styles.joinBtn} onPress={onJoin}>
-          <Text style={styles.joinText}>Join</Text>
-        </Pressable>
-
-        <Text style={styles.footer}>
-          Don’t have an account?{' '}
-          <Link href="./sign-up" style={styles.signupLink}>
-            Sign up
-          </Link>
-        </Text>
-      </View>
-    </View>
-  );
-};
+import { login } from '../../service/auth';
+import { loginSchema } from '../../validation/loginSchema';
 
 const FIELD_WIDTH = 320; // deixa próximo ao mock
 
@@ -161,6 +96,98 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
 });
+
+const Login = () => {
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const router = useRouter();
+
+  // auth...
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function signIn(email: string, password: string) {
+    setLoading(true);
+    setError(null);
+
+    if (email && password) {
+      try {
+        const { token, user } = await login(email, password);
+        // aqui você pode salvar o user no seu estado global (Zustand/Redux/Context)
+        console.log("Response:", { token, user })
+        router.push('./menu');
+        return { token, user };
+
+      } catch (e: any) {
+        setError(e.message);
+        throw e;
+      } finally {
+        setLoading(false);
+      }
+
+    } else {
+      alert("Erro - You must fill in the fields")
+    }
+  }
+
+  return (
+    <View style={styles.container}>
+      {/* Header com back */}
+      <View style={styles.headerRow}>
+        <Link href="/" asChild>
+          <Pressable hitSlop={8}>
+            <Ionicons name="chevron-back" size={24} color={palette.text} />
+          </Pressable>
+        </Link>
+        <Text style={styles.title}>Welcome back</Text>
+        <View style={{ width: 24 }} />
+      </View>
+
+      <Text style={styles.subtitle}>
+        Sign in to your essential{'\n'}Services club
+      </Text>
+
+      <View style={styles.form}>
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor={palette.placeholder}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
+
+        />
+
+        <TextInput
+          style={[styles.input, { marginTop: 16 }]}
+          placeholder="Password"
+          placeholderTextColor={palette.placeholder}
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
+
+        {/* Ele será redirecionado para o suporte do app */}
+        <Link href="./forgot" style={styles.forgotLink}>
+          Forgot password?
+        </Link>
+
+        <Pressable style={styles.joinBtn} onPress={() => signIn(email, password)}>
+          <Text style={styles.joinText}>Join</Text>
+        </Pressable>
+
+        <Text style={styles.footer}>
+          Don’t have an account?{' '}
+          <Link href="./sign-up" style={styles.signupLink}>
+            Sign up
+          </Link>
+        </Text>
+      </View>
+    </View>
+  );
+};
 
 export default Login;
 
